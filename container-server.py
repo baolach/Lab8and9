@@ -36,14 +36,20 @@ DELETE /images                      Delete all images
 def containers_index():
     """
     List all containers
- 
+     
+
+
     curl -s -X GET -H 'Accept: application/json' http://localhost:8080/containers | python -mjson.tool
     curl -s -X GET -H 'Accept: application/json' http://localhost:8080/containers?state=running | python -mjson.tool
-
     """
 
-    resp = ''
+    if request.args.get('state') == 'running':
+        output = docker('ps')
+    else:
+        output = docker('ps', '-a')
+    resp = json.demps(docker_ps_to_array(output))
     return Response(response=resp, mimetype="application/json")
+
 
 @app.route('/images', methods=['GET'])
 def images_index():
@@ -53,7 +59,9 @@ def images_index():
     Complete the code below generating a valid response. 
     """
     
-    resp = ''
+    output = docker ('images')
+    
+    resp = json.dumps(docker_images_to_array(output))
     return Response(response=resp, mimetype="application/json")
 
 @app.route('/containers/<id>', methods=['GET'])
@@ -62,8 +70,8 @@ def containers_show(id):
     Inspect specific container
 
     """
-
-    resp = ''
+    output = docker ('inspect')
+    resp = json.dumps(docker_images_to_array(output))
 
     return Response(response=resp, mimetype="application/json")
 
@@ -73,7 +81,9 @@ def containers_log(id):
     Dump specific container logs
 
     """
-    resp = ''
+    output = docker ('containers',id,'logs')
+    resp = json.dumps(docker_logs_to_object(id,output))
+
     return Response(response=resp, mimetype="application/json")
 
 
@@ -92,16 +102,18 @@ def containers_remove(id):
     Delete a specific container - must be already stopped/killed
 
     """
-    resp = ''
+    docker ('rm','-f','container',id)
+    resp = json.dumps(docker_ps_to_array(output))   
     return Response(response=resp, mimetype="application/json")
 
 @app.route('/containers', methods=['DELETE'])
 def containers_remove_all():
     """
     Force remove all containers - dangrous!
-
     """
-    resp = ''
+    output = docker ('ps','-a','-q')
+    docker ('rm',output)
+    resp = json.dumps(docker_ps_to_array(output))
     return Response(response=resp, mimetype="application/json")
 
 @app.route('/images', methods=['DELETE'])
@@ -111,7 +123,10 @@ def images_remove_all():
 
     """
  
-    resp = ''
+    all = docker_images_to_array(docker('images'))
+    for i in all:
+	docker('rmi',i['id'])
+    resp = '{"count": "%d"}' % len(all)
     return Response(response=resp, mimetype="application/json")
 
 
