@@ -30,7 +30,7 @@ until [ "$selection" = "0" ]; do
 	read selection
 
 	case $selection in
-		1  ) 	http://ec2-52-30-47-247.eu-west-1.compute.amazonaws.com 
+		1  ) 	ping https://ec2-52-30-47-247.eu-west-1.compute.amazonaws.com:8080 
 			press_enter
 			;;
 		2  )   	curl -s -X GET -H 'Accept: application/json' http://localhost:8080/containers | python -mjson.tool
